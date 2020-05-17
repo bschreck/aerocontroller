@@ -1,74 +1,51 @@
-"""
-# Author: Howard Webb
-# Data: 7/25/2017
-# Thermostat controller that reads the temperature sensor and adjusts the exhaust fan
-
-"""
-from Fan import Fan
+from relay import Relay
 from SI7021 import SI7021
 
-# TODO: turn out fan and top fan on if humidity too high
-# and reverse otherwise
-# turn all in/out on if heat too high
-# turn top off if humidity too low unless in "cooling" state
-def adjust_thermostat(target_temp, light, fan, slack=1):
+
+def incubate(target_temp, target_humidity, slack=1):
     temp_sensor = SI7021()
     temp = temp_sensor.get_tempC()
-    l = Light()
-    l.set_on()
-    f = Fan()
+    humidity = temp_sensor.get_humidity()
+    relay = Relay()
+    on = relay.On
+    off = relay.Off
+    light = relay.add_object("Light", 29)
+    overhead_fan = relay.add_object("OverheadFan", 31)
+    in_fan = relay.add_object("InFan", 33)
+    out_fan = relay.add_object("OutFan", 35)
 
-    fan1_state, fan2_state = fan.relay.get_state(self.fan_relay)
-    light_state = light.get_state()
-    msg = "{} {} {} {} {} {}".format(
-            "Temp:", temp, 
-            " Target Temp:", target_temp, 
-            " Fan State:", fan_state,
-            " Light state:", light_state)
-    self.logger.info(msg)
+    print("Current State:")
+    print(f"Target Temp = {target_temp}")
+    print(f"Current Temp = {temp}")
+    print(f"Target Humidity = {target_humidity}")
+    print(f"Current Humidity = {humidity}")
+    print(f"Light state = {light.state}")
+    print(f"Overhead fan state = {overhead_fan.state}")
+    print(f"In fan state = {in_fan.state}")
+    print(f"Out fan state = {out_fan.state}")
     if temp > (target_temp + slack):
-        if not fan1_state or not fan2_state:
-            fan.set_fan_on()
-            self.logger.debug("Turning fan on")
-        if light_state:
-            light.set_off()
-            self.logger.debug("Turning light off")
-        self.log_state("Cooling")
-
-    elif temp <= (target_temp - slack):
-        if fan_state:
-        if fan1_state or fan2_state:
-            self.set_fan_off()
-            self.logger.debug("Turning fan off")
-        if not light_state:
-            light.set_on()
-            self.logger.debug("Turning light on")
-        self.log_state("Heating")
+        print("Setting state to cooling")
+        in_fan.set_on()
+        out_fan.set_on()
+        light.set_off()
+    elif temp < (target_temp - slack):
+        print("Setting state to heating")
+        in_fan.set_off()
+        out_fan.set_off()
+        light.set_on()
     else:
-        self.logger.debug("No change to state")
-
-    fan = Fan()
-    fan.adjust(temp, test)
-
-def test():
-    """Self test
-           Args:
-               None
-           Returns:
-               None
-           Raises:
-               None
-    """
-    print "Test"
-    adjust_thermostat(40, True)
-    print "Adjust Thermostat 40"
-    adjust_thermostat(20, True)
-    print "Adjust Thermostat 20"
-    adjust_thermostat(None, True)
-    print "Adjust Thermostat None"
-
-if __name__ == "__main__":
-    adjust_thermostat()
+        print("No temperature action taken")
+    if humidity > (target_humidity + slack):
+        print("Setting state to drying")
+        out_fan.set_on()
+        overhead_fan.set_on()
+    elif humidity < (target_humidity - slack):
+        print("Setting state to moistening")
+        out_fan.set_off()
+        overhead_fan.set_off()
+    else:
+        print("No humidity action taken")
 
 
-
+if __name__ == '__main__':
+    incubate()

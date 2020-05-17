@@ -1,34 +1,20 @@
-# Author: Howard Webb
-# Date: 7/25/2017
-# Code for managing the relay switch
-
 import RPi.GPIO as GPIO
 import time
-from LogUtil import get_logger
 
-ON=1
-OFF=0
 
-Relay1 = 29 # Fan
-Relay2 = 31
-Relay3 = 33 # LED
-Relay4 = 35 # Solenoid
+class Relay
+    On = 1
+    Off = 0
+    relay_pins = [29, 31, 33, 35]
 
-lightPin=29
-fanPin2=33
-fanPin=35
-
-class Relay(object):
 
     def __init__(self):
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(Relay1, GPIO.OUT)
-        GPIO.setup(Relay2, GPIO.OUT)
-        GPIO.setup(Relay3, GPIO.OUT)
-        GPIO.setup(Relay4, GPIO.OUT)
-        self.logger = get_logger('Relay')        
-    
+        for pin in self.relay_pins:
+            GPIO.setup(pin, GPIO.OUT)
+        self.objects = {}
+
     def set_state(self, pin, state, test=False):
         '''Change state if different'''
         msg = "{}, {}, {}".format("Current ", state, GPIO.input(pin))
@@ -46,9 +32,7 @@ class Relay(object):
             self.logger.debug(msg)
 
     def get_state(self, pin):
-        '''Get the current state of the pin'''
-        state=GPIO.input(pin)
-        return state
+        return GPIO.input(pin)
 
     def set_off(self, pin, test=False):
         GPIO.output(pin, GPIO.LOW)
@@ -56,52 +40,37 @@ class Relay(object):
     def set_on(self, pin, test=False):
         GPIO.output(pin, GPIO.HIGH)
 
-def test():
-    
-    relay=Relay()
-    print "Test"
-    print "Read #3 Unknown: ", relay.get_state(Relay3)
-    print "Test Fan and Lights"
-    print "Turn Fan On"
-    relay.set_on(fanPin, True)
-    time.sleep(5)
-    print "Turn Light On"
-    relay.set_state(lightPin, True)
-    time.sleep(5)
-    print "Turn Fan Off"
-    relay.set_off(lightPin, True)
-    time.sleep(5)        
-    print "Turn Light Off"
-    relay.set_off(lightPin, True)
-    time.sleep(5)
+    def add_object(self, name, pin):
+        self.objects[name] = RelayObject(name, self, self.objects[pin])
+        return self.objects[name]
 
-    print "Conditional Turn Fan On"
-    relay.set_state(fanPin, ON, True)
-    time.sleep(5)        
-    print "Conditional Turn Fan On"
-    relay.set_state(fanPin, ON, True)
-    time.sleep(5)
-    print "Conditional Turn Fan Off"
-    relay.set_state(fanPin, OFF, True)
-    time.sleep(5)        
-    print "Conditional Turn Fan Off"
-    relay.set_state(fanPin, OFF, True)
+    def __getattr__(self, name):
+        obj = self.objects.get(name, None)
+        if obj:
+            return obj
+        return super().__getattr__(name)
 
-def test1():
-    relay=Relay()
-    relay.set_state(Relay1, ON)
-    relay.set_state(Relay1, OFF)
-    relay.set_state(Relay2, ON)
-    relay.set_state(Relay2, OFF)
-    relay.set_state(Relay3, ON)
-    relay.set_state(Relay3, OFF)
-    relay.set_state(Relay4, ON)
-    relay.set_state(Relay4, OFF)
+    def __getitem__(self, name):
+        obj = self.objects.get(name, None)
+        if obj:
+            return obj
+        return super().__getitem__(name)
 
-if __name__=="__main__":
-    test()
 
-    
-            
-    
+class RelayObject:
+    def __init__(self, name, relay, pin):
+        self.name = name
+        self.pin = pin
 
+    def __repr__(self):
+        return f"{name}RelayObject: state = {self.state}"
+
+    @property
+    def state(self):
+        return self.relay.get_state(self.pin)
+
+    def set_on(self):
+        self.relay.set_on(self.pin)
+
+    def set_off(self):
+        self.relay.set_off(self.pin)

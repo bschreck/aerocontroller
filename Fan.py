@@ -16,69 +16,19 @@ class Fan(object):
     relay = None
     target_temp = 0
 
-    def __init__(self):
+    def __init__(self, pin, relay):
         self.logger = get_logger("Fan")
-        self.logger.debug("initialize Fan object")
-        self.relay = Relay()
-        self.fan_relay = fanPin
-        self.fan_relay2 = fanPin2
+        self.pin = pin
+        self.relay = relay
 
-    def set_fan_on(self):
-        """Turn the fan on
-            Args:
-                None
-            Returns:
-                None
-            Raises:
-                None
-        """
-        self.logger.debug("In set_fan_on")
-        self.relay.set_state(self.fan_relay, ON)
-        self.relay.set_state(self.fan_relay2, ON)
+    def set_on(self):
+        self.relay.set_state(self.pin, self.relay.On)
 
-    def set_fan_off(self):
-        """Turn the fan off
-            Args:
-                None
-            Returns:
-                None
-            Raises:
-                None
-        """
-        self.logger.debug("In set_fan_off")
-        self.relay.set_state(self.fan_relay, OFF)
-        self.relay.set_state(self.fan_relay2, OFF)
-
-    def adjust(self, temp, test=False):
-        """Determine if the fan should change state
-            Args:
-                temp: current temperature
-                test: flag for testing
-            Returns:
-                None
-            Raises:
-                None
-        """
-        self.logger.debug("In adjust")
-        fan_state = self.relay.get_state(self.fan_relay)
-        target_temp = env['thermostat']['targetTemp']
-        msg = "{} {} {} {} {} {}".format("Temp:", temp, " Target Temp:", target_temp, " Fan State:", fan_state)
-        self.logger.info(msg)
-        if temp > target_temp and not fan_state:
-            self.set_fan_on()
-            self.log_state("On", test)
-            self.logger.debug("Turning fan on")
-
-        elif temp <= target_temp and fan_state:
-            self.set_fan_off()
-            self.log_state("Off", test)
-            self.logger.debug("Turning fan on")
-        else:
-            self.logger.debug("No change to fan")
+    def set_off(self):
+        self.relay.set_state(self.pin, self.relay.Off)
 
     def get_state(self):
-        return (self.relay.get_state(self.fan_relay),
-                self.relay.get_state(self.fan_relay2))
+        return self.relay.get_state(self.pin)
 
     def log_state(self, value, test=False):
         """Send state change to database
