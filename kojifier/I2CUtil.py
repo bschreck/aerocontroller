@@ -84,7 +84,7 @@ class I2C:
            print(e)
            return None
 
-def bytesToWord(high, low):
+def bytes_to_word(high, low):
    """Convert two byte buffers into a single word value
        shift the first byte into the work high position
        then add the low byte

@@ -1,16 +1,5 @@
-"""
-SI7021 humidity and temperature sensor
-Technical notes of commands and operation and from:
-https://www.silabs.com/documents/public/data-sheets/Si7021-A20.pdf
-
- Author : Howard Webb
- Date   : 06/20/2018
-
-"""
-
-
 import time
-from I2CUtil import I2C, bytesToWord
+from I2CUtil import I2C, bytes_to_word
 
 
 # Device I2C address
@@ -82,7 +71,7 @@ class SI7021:
        if msgs == None:
            return None
        else:
-           value = bytesToWord(msgs[1].data[0],msgs[1].data[1])
+           value = bytes_to_word(msgs[1].data[0],msgs[1].data[1])
            tempC = self.calc_temp(value)
            return tempC
 
@@ -103,7 +92,7 @@ class SI7021:
        if msgs == None:
            return None
        else:
-           value = bytesToWord(msgs[0].data[0], msgs[0].data[1])
+           value = bytes_to_word(msgs[0].data[0], msgs[0].data[1])
            rh = self.calc_humidity(value)
            return rh
 
@@ -123,7 +112,7 @@ class SI7021:
        if msgs == None:
            return None
        else:
-           value = bytesToWord(msgs[0].data[0], msgs[0].data[1])
+           value = bytes_to_word(msgs[0].data[0], msgs[0].data[1])
            return self.calc_temp(value)
 
 
