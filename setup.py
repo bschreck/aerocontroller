@@ -9,7 +9,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         'python-periphery',
-        'RPi-GPIO'
+        'RPi-GPIO',
+        'python-crontab',
+        'fire'
     ],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -21,7 +23,8 @@ setup(
     include_package_data=True,
     entrypoints={
     'console_scripts': [
-            'kojify = kojifier.incubator:incubate',
+            'kojify_adjust = kojifier.incubator:adjust',
+            'kojify_schedule = kojifier.schedule:schedule',
         ],
     }
 )

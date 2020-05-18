@@ -2,7 +2,7 @@ from relay import Relay
 from SI7021 import SI7021
 
 
-def incubate(target_temp, target_humidity, slack=1):
+def adjust(target_temp, target_humidity, slack=1):
     temp_sensor = SI7021()
     temp = temp_sensor.get_tempC()
     humidity = temp_sensor.get_humidity()
@@ -45,7 +45,3 @@ def incubate(target_temp, target_humidity, slack=1):
         overhead_fan.set_off()
     else:
         print("No humidity action taken")
-
-
-if __name__ == '__main__':
-    incubate()
