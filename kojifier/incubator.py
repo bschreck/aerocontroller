@@ -8,11 +8,15 @@ import fire
 def adjust(temp=25, humidity=90, slack=1):
     target_temp = temp
     target_humidity = humidity
-    # temp_sensor = SI7021()
-    # temp = temp_sensor.get_tempC()
-    temp = 20
-    # humidity = temp_sensor.get_humidity()
-    humidity = 85
+    temp_sensor = SI7021()
+    temp = temp_sensor.get_tempC()
+    if temp is None:
+        temp = 1000
+    # temp = 20
+    humidity = temp_sensor.get_humidity()
+    if humidity is None:
+        humidity = 100
+    # humidity = 85
 
 
     print("Current State:")
