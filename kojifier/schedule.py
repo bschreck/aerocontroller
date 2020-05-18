@@ -4,7 +4,8 @@ import fire
 
 
 def schedule(temp=25, humidity=90, slack=1, output_log='~/.kojifier/log.txt'):
-    Path(output_log).expanduser().mkdir(parents=True, exist_ok=True)
+    output_log = Path(output_log).expanduser()
+    output_log.parent.mkdir(parents=True, exist_ok=True)
     with CronTab(user=True) as cron:
         iter = cron.find_command('kojify_adjust')
         for job in iter:
