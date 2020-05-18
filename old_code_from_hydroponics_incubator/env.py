@@ -1,1 +1,0 @@
-env={'field': {'field_id': 'c0ec36ec-3b8c-4fa3-ba20-1c368474c201'}, 'thermostat': {'targetTemp': 25}, 'lights': {'On': '06:30:00', 'Off': '22:00:00'}}
