@@ -1,0 +1,4 @@
+[console_scripts]
+kojify_adjust = kojifier.incubator:adjust
+kojify_schedule = kojifier.schedule:schedule
+

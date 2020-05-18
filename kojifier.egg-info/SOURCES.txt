@@ -1,0 +1,13 @@
+setup.py
+kojifier/I2CUtil.py
+kojifier/SI7021.py
+kojifier/__init__.py
+kojifier/incubator.py
+kojifier/relay.py
+kojifier/schedule.py
+kojifier.egg-info/PKG-INFO
+kojifier.egg-info/SOURCES.txt
+kojifier.egg-info/dependency_links.txt
+kojifier.egg-info/entry_points.txt
+kojifier.egg-info/requires.txt
+kojifier.egg-info/top_level.txt

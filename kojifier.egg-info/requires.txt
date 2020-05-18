@@ -1,0 +1,4 @@
+python-periphery
+gpiozero
+python-crontab
+fire

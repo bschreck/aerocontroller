@@ -1,5 +1,5 @@
 import time
-from I2CUtil import I2C, bytes_to_word
+from .I2CUtil import I2C, bytes_to_word
 
 
 # Device I2C address

@@ -9,7 +9,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'python-periphery',
-        'RPi-GPIO',
+        'gpiozero',
         'python-crontab',
         'fire'
     ],
@@ -21,9 +21,9 @@ setup(
     ],
     package_data={"": ["*.txt", "*.yml", "*.yaml", "*.json"]},
     include_package_data=True,
-    entrypoints={
+    entry_points={
     'console_scripts': [
-            'kojify_adjust = kojifier.incubator:adjust',
+            'kojify_adjust = kojifier.incubator:main',
             'kojify_schedule = kojifier.schedule:schedule',
         ],
     }

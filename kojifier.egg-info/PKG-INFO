@@ -1,0 +1,14 @@
+Metadata-Version: 1.1
+Name: kojifier
+Version: 0.0.1
+Summary: Software to control a fermentation incubator
+Home-page: UNKNOWN
+Author: bschreck
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Programming Language :: Python :: 3.7
