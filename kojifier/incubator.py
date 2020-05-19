@@ -3,57 +3,100 @@ from .SI7021 import SI7021
 from gpiozero import LED
 # from signal import pause
 import fire
+import time
+import sys
 
 
-def adjust(temp=25, humidity=90, slack=1):
-    target_temp = temp
-    target_humidity = humidity
-    temp_sensor = SI7021()
-    temp = temp_sensor.get_tempC()
-    if temp is None:
-        temp = 1000
-    # temp = 20
-    humidity = temp_sensor.get_humidity()
-    if humidity is None:
-        humidity = 100
-    # humidity = 85
 
 
-    print("Current State:")
-    print(f"Target Temp = {target_temp}")
-    print(f"Current Temp = {temp}")
-    print(f"Target Humidity = {target_humidity}")
-    print(f"Current Humidity = {humidity}")
+class Incubator:
+    def __init__(self, temp=25, humidity=90, slack=1):
+        self.target_temp = temp
+        self.target_humidity = humidity
+        self.slack = slack
+        self.temp_sensor = SI7021()
+        self.light = LED('BOARD29')
+        self.overhead_fan = LED('BOARD31')
+        self.in_fan = LED('BOARD33')
+        self.out_fan = LED('BOARD35')
 
-    light = LED('BOARD29')
-    overhead_fan = LED('BOARD31')
-    in_fan = LED('BOARD33')
-    out_fan = LED('BOARD35')
-    if temp > (target_temp + slack):
+
+
+    def set_cooling(self):
         print("Setting state to cooling")
-        in_fan.on()
-        out_fan.on()
-        light.off()
-    elif temp < (target_temp - slack):
+        self.in_fan.on()
+        self.out_fan.on()
+        self.light.off()
+
+    def set_heating(self):
         print("Setting state to heating")
-        in_fan.off()
-        out_fan.off()
-        light.on()
-    else:
-        print("No temperature action taken")
-    if humidity > (target_humidity + slack):
+        self.in_fan.off()
+        self.out_fan.off()
+        self.light.on()
+
+    def set_drying(self):
         print("Setting state to drying")
-        out_fan.on()
-        overhead_fan.on()
-    elif humidity < (target_humidity - slack):
-        print("Setting state to moistening")
-        out_fan.off()
-        overhead_fan.off()
-    else:
-        print("No humidity action taken")
+        self.out_fan.on()
+        self.overhead_fan.on()
 
-    # signal.pause()
+    def set_humidifying(self):
+        print("Setting state to humidifying")
+        self.out_fan.off()
+        self.overhead_fan.off()
+
+    @property
+    def too_hot(self):
+        return self.temp > (self.target_temp + self.slack)
+
+    @property
+    def too_cold(self):
+        return self.temp < (self.target_temp - self.slack)
+
+    @property
+    def too_dry(self):
+        return self.humidity < (self.target_humidity - self.slack)
+
+    @property
+    def too_wet(self):
+        return self.humidity > (self.target_humidity + self.slack)
+
+    def adjust(self):
+        self.temp = self.temp_sensor.get_tempC()
+        if self.temp is None:
+            self.temp = 1000
+        self.humidity = self.temp_sensor.get_humidity()
+        if self.humidity is None:
+            self.humidity = 100
+
+        print("Current State:")
+        print(f"Target Temp = {self.target_temp}")
+        print(f"Current Temp = {self.temp}")
+        print(f"Target Humidity = {self.target_humidity}")
+        print(f"Current Humidity = {self.humidity}")
 
 
-def main():
-      fire.Fire(adjust)
+        if self.too_hot:
+            self.set_cooling()
+        elif self.too_cold:
+            self.set_heating()
+            # fans cool things down too much
+            self.set_humidifying()
+        else:
+            print("No temperature action taken")
+        if self.too_hot and self.too_wet:
+            self.set_cooling()
+            self.set_drying()
+        elif self.too_hot and self.too_dry:
+            self.set_cooling()
+            self.set_humidifying()
+        sys.stdout.flush()
+
+def adjust(temp=25, humidity=90, slack=1, interval=5):
+    inc = Incubator(temp, humidity, slack)
+    while True:
+        inc.adjust()
+        time.sleep(interval)
+
+
+def cli():
+    fire.Fire(adjust)

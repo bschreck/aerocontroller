@@ -4,7 +4,8 @@ from subprocess import check_output
 import fire
 
 
-def schedule(temp=25, humidity=90, slack=1, output_log='~/.kojifier/log.txt'):
+def schedule(temp=25, humidity=85, slack=1, output_log='~/.kojifier/log.txt'):
+    print(f"Scheduling kojifier with temp={temp}, humidity={humidity}, slack={slack}, log={output_log}")
     output_log = Path(output_log).expanduser()
     output_log.parent.mkdir(parents=True, exist_ok=True)
     cmd = check_output(['which', 'kojify_adjust'])
@@ -19,5 +20,5 @@ def schedule(temp=25, humidity=90, slack=1, output_log='~/.kojifier/log.txt'):
     print('cron.write() was just executed')
 
 
-if __name__ == '__main__':
+def cli():
     fire.Fire(schedule)
