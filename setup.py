@@ -11,7 +11,8 @@ setup(
         'python-periphery',
         'gpiozero',
         'python-crontab',
-        'fire'
+        'fire',
+        'w1thermsensor'
     ],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
