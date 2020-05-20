@@ -79,7 +79,7 @@ class Incubator:
         self.temp = self.temp_sensor.get_tempC()
         if self.temp is None:
             self.temp = 1000
-        if isinstance(self.temp_sensor, SI7021)
+        if isinstance(self.temp_sensor, SI7021):
             self.humidity = self.temp_sensor.get_humidity()
             if self.humidity is None:
                 self.humidity = 100
@@ -108,8 +108,10 @@ class Incubator:
         sys.stdout.flush()
 
 
-def adjust(temp=25, humidity=90, slack=1, interval=5):
-    inc = Incubator(temp, humidity, slack)
+def adjust(temp=25, humidity=90, slack=1, interval=5,
+           temp_sensor='SI7021', unit='C'):
+    inc = Incubator(temp, humidity, slack, temp_sensor=temp_sensor,
+                    unit=unit)
     while True:
         inc.adjust()
         time.sleep(interval)
