@@ -1,0 +1,4 @@
+kojifier.egg-info
+kojifier.egg-info/*
+__pycache__
+kojifier/__pycache__

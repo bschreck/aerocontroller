@@ -79,16 +79,18 @@ class Incubator:
         self.temp = self.temp_sensor.get_temp(self.unit)
         if self.temp is None:
             self.temp = 1000
+
+        print("Current State:")
+        print(f"Target Temp = {self.target_temp}")
+        print(f"Current Temp = {self.temp}")
+
         if isinstance(self.temp_sensor, SI7021):
             self.humidity = self.temp_sensor.get_humidity()
             if self.humidity is None:
                 self.humidity = 100
 
-        print("Current State:")
-        print(f"Target Temp = {self.target_temp}")
-        print(f"Current Temp = {self.temp}")
-        print(f"Target Humidity = {self.target_humidity}")
-        print(f"Current Humidity = {self.humidity}")
+            print(f"Target Humidity = {self.target_humidity}")
+            print(f"Current Humidity = {self.humidity}")
 
 
         if self.too_hot:
@@ -99,12 +101,13 @@ class Incubator:
             self.set_humidifying()
         else:
             print("No temperature action taken")
-        if self.too_hot and self.too_wet:
-            self.set_cooling()
-            self.set_drying()
-        elif self.too_hot and self.too_dry:
-            self.set_cooling()
-            self.set_humidifying()
+        if isinstance(self.temp_sensor, SI7021):
+            if self.too_hot and self.too_wet:
+                self.set_cooling()
+                self.set_drying()
+            elif self.too_hot and self.too_dry:
+                self.set_cooling()
+                self.set_humidifying()
         sys.stdout.flush()
 
 

@@ -2,3 +2,4 @@ fire
 gpiozero
 python-crontab
 python-periphery
+w1thermsensor
