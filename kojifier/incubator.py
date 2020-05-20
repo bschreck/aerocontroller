@@ -9,12 +9,11 @@ import sys
 
 
 class W1SensorWrapper:
-    def __init__(self, unit='F'):
+    def __init__(self):
         self.sensor = W1ThermSensor()
-        self.unit = unit
 
-    def get_temp(self):
-        if self.unit == 'F':
+    def get_temp(self, unit):
+        if unit == 'F':
             return self.sensor.get_temperature(W1ThermSensor.DEGREES_F)
         else:
             return self.sensor.get_temperature()
@@ -29,7 +28,8 @@ class Incubator:
         if temp_sensor == 'SI7021':
             self.temp_sensor = SI7021()
         else:
-            self.temp_sensor = W1SensorWrapper(unit=unit)
+            self.temp_sensor = W1SensorWrapper()
+        self.unit = unit
         self.light = LED('BOARD29')
         self.overhead_fan = LED('BOARD31')
         self.in_fan = LED('BOARD33')
@@ -76,7 +76,7 @@ class Incubator:
         return self.humidity > (self.target_humidity + self.slack)
 
     def adjust(self):
-        self.temp = self.temp_sensor.get_tempC()
+        self.temp = self.temp_sensor.get_temp(self.unit)
         if self.temp is None:
             self.temp = 1000
         if isinstance(self.temp_sensor, SI7021):

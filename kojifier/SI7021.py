@@ -96,6 +96,12 @@ class SI7021:
            rh = self.calc_humidity(value)
            return rh
 
+   def get_temp(self, unit):
+       tempc = self.get_tempC()
+       if unit == 'C':
+           return tempc
+       return tempc * (9/5) + 32
+
    def get_tempC(self):
        """Get the temperature (new reading)
            Args:

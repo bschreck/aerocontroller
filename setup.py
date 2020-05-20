@@ -24,7 +24,7 @@ setup(
     include_package_data=True,
     entry_points={
     'console_scripts': [
-            'kojify_adjust = kojifier.incubator:main',
+            'kojify_adjust = kojifier.incubator:cli',
             'kojify_schedule = kojifier.schedule:schedule',
         ],
     }
