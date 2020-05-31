@@ -1,0 +1,11 @@
+soak_time: 1s
+steam_time: 1s
+drain_time: 1s
+dry_time: 1s
+wait_for_human_input_time: 1s
+incubate_time: 1s
+incubate_temp: 88F
+slack: 1
+interval_time: 1s
+unit: F
+phone_number: 8184553749

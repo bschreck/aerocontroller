@@ -3,6 +3,7 @@ setup.py
 kojifier/I2CUtil.py
 kojifier/SI7021.py
 kojifier/__init__.py
+kojifier/auto_fermenter.py
 kojifier/incubator.py
 kojifier/schedule.py
 kojifier/take_one_wire_temp.py

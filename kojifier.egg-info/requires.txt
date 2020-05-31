@@ -1,5 +1,6 @@
-fire
+python-periphery
 gpiozero
 python-crontab
-python-periphery
+fire
 w1thermsensor
+twilio

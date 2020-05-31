@@ -1,0 +1,11 @@
+soak_time: 12h
+steam_time: 60m
+drain_time: 10m
+dry_time: 30m
+wait_for_human_input_time: 20m
+incubate_time: 36h
+incubate_temp: 88F
+slack: 1
+interval_time: 1s
+unit: F
+phone_number: 8184553749

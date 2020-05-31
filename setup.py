@@ -12,7 +12,13 @@ setup(
         'gpiozero',
         'python-crontab',
         'fire',
-        'w1thermsensor'
+        'w1thermsensor',
+        'twilio',
+        'python-dotenv',
+        'pyyaml'
+    ],
+    tests_require=[
+        "pytest"
     ],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -26,6 +32,7 @@ setup(
     'console_scripts': [
             'kojify_adjust = kojifier.incubator:cli',
             'kojify_schedule = kojifier.schedule:schedule',
+            'auto_fermenter = kojifier.auto_fermenter:cli'
         ],
     }
 )
