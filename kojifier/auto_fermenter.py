@@ -48,6 +48,7 @@ class AutoFermenter:
                  config=None,
                  soak_time=60*60*12,
                  steam_time=60*60,
+                 cool_time=60*10,
                  drain_time=60*10,
                  dry_time=60*30,
                  wait_for_human_input_time=60*20,
@@ -152,22 +153,34 @@ class AutoFermenter:
         self.send_text("AutoFermenter done")
 
     def make_tempeh(self):
+        logger.info("Sleeping")
         time.sleep(self.soak_time)
+        logger.info("Heating")
         self.heat()
         time.sleep(self.steam_time)
+        logger.info("Cooling")
+        self.cool(with_vent=False, with_drain=False)
+        time.sleep(self.cool_time)
+        logger.info("Draining")
         self.cool(with_vent=False, with_drain=True)
         time.sleep(self.drain_time)
+        logger.info("Drying")
         self.cool(with_vent=True, with_drain=True)
         time.sleep(self.dry_time)
         alerted = False
+        logger.info("Waiting for correct incubate temperature")
         while True:
             target_temp = self.incubate_adjust()
             if not alerted and target_temp:
+                logger.info("At target temperature")
                 self.alert_target_temp()
                 alerted = True
+                logger.info("Waiting for human input")
                 time.sleep(self.wait_for_human_input_time)
                 start_incubate_time = time.time()
+                logger.info("Starting to incubate")
             elif alerted and time.time() - start_incubate_time > self.incubate_time:
+                logger.info("Finished incubating")
                 break
             time.sleep(self.interval_time)
         self.alert_done()
