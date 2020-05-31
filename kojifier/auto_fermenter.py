@@ -47,6 +47,7 @@ class AutoFermenter:
     def __init__(self,
                  config=None,
                  soak_time=60*60*12,
+                 pre_steam_drain_time=60*10,
                  steam_time=60*60,
                  cool_time=60*10,
                  drain_time=60*10,
@@ -60,6 +61,7 @@ class AutoFermenter:
                  phone_number=None,
                  env_path=os.path.expanduser('~/.env')):
         self.soak_time = soak_time
+        self.pre_steam_drain_time = pre_steam_drain_time
         self.steam_time = steam_time
         self.cool_time = cool_time
         self.drain_time = drain_time
@@ -156,6 +158,9 @@ class AutoFermenter:
     def make_tempeh(self):
         logger.info("Soaking")
         time.sleep(self.soak_time)
+        logger.info("Draining")
+        self.cool(with_vent=False, with_drain=True)
+        time.sleep(self.pre_steam_drain_time)
         logger.info("Heating")
         self.heat()
         time.sleep(self.steam_time)

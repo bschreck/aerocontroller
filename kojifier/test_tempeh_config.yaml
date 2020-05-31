@@ -1,4 +1,5 @@
 soak_time: 1s
+pre_steam_drain_time: 1s
 steam_time: 1s
 cool_time: 1s
 drain_time: 1s

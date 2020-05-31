@@ -1,4 +1,5 @@
 soak_time: 12h
+pre_steam_drain_time: 10m
 steam_time: 60m
 cool_time: 10m
 drain_time: 10m
