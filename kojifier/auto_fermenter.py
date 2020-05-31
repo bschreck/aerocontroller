@@ -61,6 +61,7 @@ class AutoFermenter:
                  env_path=os.path.expanduser('~/.env')):
         self.soak_time = soak_time
         self.steam_time = steam_time
+        self.cool_time = cool_time
         self.drain_time = drain_time
         self.dry_time = dry_time
         self.wait_for_human_input_time = wait_for_human_input_time
@@ -153,7 +154,7 @@ class AutoFermenter:
         self.send_text("AutoFermenter done")
 
     def make_tempeh(self):
-        logger.info("Sleeping")
+        logger.info("Soaking")
         time.sleep(self.soak_time)
         logger.info("Heating")
         self.heat()
