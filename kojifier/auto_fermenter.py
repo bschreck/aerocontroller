@@ -110,6 +110,10 @@ class AutoFermenter:
             self.in_vent.on()
             self.out_vent.on()
             self.fan.on()
+        else:
+            self.in_vent.off()
+            self.out_vent.off()
+            self.fan.off()
 
     @property
     def too_hot(self):
@@ -173,6 +177,7 @@ class AutoFermenter:
         logger.info("Drying")
         self.cool(with_vent=True, with_drain=True)
         time.sleep(self.dry_time)
+        self.cool(with_vent=False, with_drain=False)
         alerted = False
         logger.info("Waiting for correct incubate temperature")
         while True:
