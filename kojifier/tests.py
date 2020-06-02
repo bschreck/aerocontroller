@@ -1,6 +1,6 @@
 import pytest
-from kojifier.utils import parse_time, parse_temp
-from kojifier.auto_fermenter import W1SensorWrapper, LEDReverseWrapper, AutoFermenter
+from kojifier.utils import parse_time, parse_temp, W1SensorWrapper, LEDReverseWrapper
+from kojifier.auto_fermenter import AutoFermenter
 from unittest.mock import call
 from unittest import mock
 

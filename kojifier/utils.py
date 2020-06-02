@@ -1,4 +1,9 @@
 import yaml
+from gpiozero import LED
+try:
+    from w1thermsensor import W1ThermSensor
+except Exception:
+    pass
 
 
 def parse_time(t):
@@ -43,3 +48,27 @@ def load_config(config_path):
         elif k.endswith("_temp"):
             config[k] = parse_temp(v, config.get("unit", "F"))
     return config
+
+
+class LEDReverseWrapper:
+    def __init__(self, pin):
+        self.led = LED(pin)
+        self.off()
+
+    def on(self):
+        self.led.off()
+
+    def off(self):
+        self.led.on()
+
+
+class W1SensorWrapper:
+    def __init__(self):
+        self.sensor = W1ThermSensor()
+
+    def get_temp(self, unit):
+        if unit == 'F':
+            return self.sensor.get_temperature(W1ThermSensor.DEGREES_F)
+        else:
+            return self.sensor.get_temperature()
+

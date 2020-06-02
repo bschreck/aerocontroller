@@ -15,7 +15,8 @@ setup(
         'w1thermsensor',
         'twilio',
         'python-dotenv',
-        'pyyaml'
+        'pyyaml',
+        'RPi.GPIO'
     ],
     tests_require=[
         "pytest"

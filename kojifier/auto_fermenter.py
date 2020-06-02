@@ -4,43 +4,17 @@ import sys
 import os
 import logging
 import fire
-try:
-    from w1thermsensor import W1ThermSensor
-except Exception:
-    pass
-from gpiozero import LED
+
 from dotenv import load_dotenv
 from kojifier import utils
-
-logger = logging.getLogger(__name__)
-console = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter("%(asctime)s - auto_fermenter - %(levelname)s - %(message)s")
-console.setFormatter(formatter)
-logger.addHandler(console)
-logger.setLevel(logging.INFO)
+from kojifier.pwm import PWM
+from kojifier.logging import get_logger
 
 
-class W1SensorWrapper:
-    def __init__(self):
-        self.sensor = W1ThermSensor()
-
-    def get_temp(self, unit):
-        if unit == 'F':
-            return self.sensor.get_temperature(W1ThermSensor.DEGREES_F)
-        else:
-            return self.sensor.get_temperature()
+logger = get_logger(__name__)
 
 
-class LEDReverseWrapper:
-    def __init__(self, pin):
-        self.led = LED(pin)
-        self.off()
 
-    def on(self):
-        self.led.off()
-
-    def off(self):
-        self.led.on()
 
 
 class AutoFermenter:
@@ -72,12 +46,12 @@ class AutoFermenter:
         self.slack = slack
         self.interval_time =  interval_time
         self.unit = unit
-        self.temp_sensor = W1SensorWrapper()
-        self.fan = LEDReverseWrapper(5)
-        self.plate = LEDReverseWrapper(6)
-        self.in_vent = LEDReverseWrapper(19)
-        self.out_vent = LEDReverseWrapper(13)
-        self.drain = LEDReverseWrapper(26)
+        self.temp_sensor = utils.W1SensorWrapper()
+        self.fan = utils.LEDReverseWrapper(5)
+        self.plate = PWM(6)
+        self.in_vent = utils.LEDReverseWrapper(19)
+        self.out_vent = utils.LEDReverseWrapper(13)
+        self.drain = utils.LEDReverseWrapper(26)
 
         load_dotenv(dotenv_path=env_path)
         self.twilio_sid =  os.environ.get("TWILIO_SID")
