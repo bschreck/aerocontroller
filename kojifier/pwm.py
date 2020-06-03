@@ -1,4 +1,4 @@
-from RPi.GPIO import GPIO
+import RPi.GPIO as GPIO
 from kojifier.logging import get_logger
 from kojifier import utils
 
@@ -7,19 +7,23 @@ logger = get_logger(__name__)
 
 
 class PWM:
-    def __init__(self, pin, max_hz=10):
+    def __init__(self, pin, freq=1, reverse=True):
         self.pin = pin
-        self.max_hz = max_hz
-        GPIO.setmode(GPIO.BOARD)
+        self.freq = freq
+        GPIO.setmode(GPIO.BCM)
+        # GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.pin, GPIO.OUT)
-        self.obj = None
+        self.obj = GPIO.PWM(self.pin, self.freq)
+        self.reverse = reverse
+        if self.reverse:
+            self.obj.start(1)
+        else:
+            self.obj.start(100)
 
-    def power_to_freq(self, power):
-        return power * self.max_hz
-
-    def set_power(self, power):
-        self.obj = GPIO.PWM(self.pin, self.power_to_freq(power))
-        self.obj.start(1)
+    def set_duty_cycle(self, dc):
+        if self.reverse:
+            dc = 100 - dc
+        self.obj.ChangeDutyCycle(dc)
 
     def off(self):
         if self.obj:

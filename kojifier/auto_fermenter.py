@@ -1,4 +1,5 @@
 import time
+import datetime
 from pathlib import Path
 import sys
 import os
@@ -7,14 +8,14 @@ import fire
 
 from dotenv import load_dotenv
 from kojifier import utils
+from kojifier.utils import W1SensorWrapper
 from kojifier.pwm import PWM
 from kojifier.logging import get_logger
+from simple_pid import PID
+import pandas as pd
 
 
 logger = get_logger(__name__)
-
-
-
 
 
 class AutoFermenter:
@@ -30,10 +31,17 @@ class AutoFermenter:
                  incubate_time=60*60*36,
                  incubate_temp=88,
                  slack=1,
-                 interval_time=1,
+                 interval_time=0.5,
                  unit='F',
                  phone_number=None,
-                 env_path=os.path.expanduser('~/.env')):
+                 env_path=os.path.expanduser('~/.env'),
+                 pwm_freq=2,
+                 pid_Kp=1.0,
+                 pid_Ki=0.1,
+                 pid_Kd=0.05,
+                 checkpoint_length=10,
+                 history_file=os.path.expanduser('~/.auto_fermenter_history')
+                 ):
         self.soak_time = soak_time
         self.pre_steam_drain_time = pre_steam_drain_time
         self.steam_time = steam_time
@@ -46,7 +54,7 @@ class AutoFermenter:
         self.slack = slack
         self.interval_time =  interval_time
         self.unit = unit
-        self.temp_sensor = utils.W1SensorWrapper()
+        self.temp_sensor = W1SensorWrapper(self)
         self.fan = utils.LEDReverseWrapper(5)
         self.plate = PWM(6)
         self.in_vent = utils.LEDReverseWrapper(19)
@@ -54,10 +62,18 @@ class AutoFermenter:
         self.drain = utils.LEDReverseWrapper(26)
 
         load_dotenv(dotenv_path=env_path)
-        self.twilio_sid =  os.environ.get("TWILIO_SID")
-        self.twilio_token =  os.environ.get("TWILIO_TOKEN")
+        self.twilio_sid = os.environ.get("TWILIO_SID")
+        self.twilio_token = os.environ.get("TWILIO_TOKEN")
         self.twilio_from_number = os.environ.get("TWILIO_FROM_NUMBER")
         self.phone_number = phone_number
+
+        self.pwm_freq = pwm_freq
+        self.pid_Kp = pid_Kp
+        self.pid_Ki = pid_Ki
+        self.pid_Kd = pid_Kd
+
+        self.checkpoint_length = checkpoint_length
+        self.history_file = history_file
 
         if config:
             for k, v in utils.load_config(config).items():
@@ -67,15 +83,32 @@ class AutoFermenter:
             from twilio.rest import Client
             self.twilio_client = Client(self.twilio_sid, self.twilio_token)
 
-    def heat(self):
-        self.plate.on()
+        self.pid = PID(self.pid_Kp, self.pid_Ki, self.pid_Kd,
+                       setpoint=self.incubate_temp)
+        self.pid.output_limits = (0, 100)
+        self.pid.sample_time = self.interval_time
+        self.history = {
+            'power': [],
+            'temp': [],
+            'time': [],
+        }
+
+    def log_history(self, power):
+        self.history['power'].append(power)
+        self.history['temp'].append(self.temp)
+        self.history['time'].append(datetime.datetime.now())
+
+    def heat(self, power):
+        self.log_history(power)
+        self.plate.set_duty_cycle(power)
         self.fan.off()
         self.in_vent.off()
         self.out_vent.off()
         self.drain.off()
 
-    def cool(self, with_vent=False, with_drain=False):
-        self.plate.off()
+    def cool(self, power, with_vent=False, with_drain=False):
+        self.log_history(power)
+        self.plate.set_duty_cycle(power)
         if with_drain:
             self.drain.on()
         else:
@@ -97,22 +130,27 @@ class AutoFermenter:
     def too_cold(self):
         return self.temp < (self.incubate_temp - self.slack)
 
+    @property
+    def temp(self):
+        return self.temp_sensor.get_temp(self.unit)
+
     def incubate_adjust(self):
-        self.temp = self.temp_sensor.get_temp(self.unit)
         if self.temp is None:
-            self.temp = 1000
+            logger.info("Unknown current temp")
+            sys.stdout.flush()
+            return False
         logger.info("Current State:")
         logger.info(f"Target Temp = {self.incubate_temp}")
         logger.info(f"Current Temp = {self.temp}")
-        if self.too_hot:
-            self.cool(with_vent=False, with_drain=False)
-            return False
-        elif self.too_cold:
-            self.heat()
+        self.new_hot_plate_power = self.pid(self.temp)
+        if self.new_hot_plate_power > 50:
+            self.cool(self.new_hot_plate_power, with_vent=False, with_drain=False)
         else:
-            logger.info("No temperature action taken")
+            self.heat(self.new_hot_plate_power)
         sys.stdout.flush()
-        return True
+        if not self.too_hot and not self.too_cold:
+            return True
+        return False
 
     def send_text(self, msg):
         if self.twilio_client:
@@ -137,23 +175,25 @@ class AutoFermenter:
         logger.info("Soaking")
         time.sleep(self.soak_time)
         logger.info("Draining")
-        self.cool(with_vent=False, with_drain=True)
+        self.cool(0, with_vent=False, with_drain=True)
         time.sleep(self.pre_steam_drain_time)
         logger.info("Heating")
-        self.heat()
+        self.heat(100)
         time.sleep(self.steam_time)
         logger.info("Cooling")
-        self.cool(with_vent=False, with_drain=False)
+        self.cool(0, with_vent=False, with_drain=False)
         time.sleep(self.cool_time)
         logger.info("Draining")
-        self.cool(with_vent=False, with_drain=True)
+        self.cool(0, with_vent=False, with_drain=True)
         time.sleep(self.drain_time)
         logger.info("Drying")
-        self.cool(with_vent=True, with_drain=True)
+        self.cool(0, with_vent=True, with_drain=True)
         time.sleep(self.dry_time)
-        self.cool(with_vent=False, with_drain=False)
+        self.cool(0, with_vent=False, with_drain=False)
         alerted = False
         logger.info("Waiting for correct incubate temperature")
+        self.save_history()
+        self.previous_checkpoint = time.time()
         while True:
             target_temp = self.incubate_adjust()
             if not alerted and target_temp:
@@ -168,7 +208,13 @@ class AutoFermenter:
                 logger.info("Finished incubating")
                 break
             time.sleep(self.interval_time)
+            if time.time() - self.previous_checkpoint > self.checkpoint_length:
+                self.save_history()
+                self.previous_checkpoint = time.time()
         self.alert_done()
+        self.save_history()
+    def save_history(self):
+        pd.DataFrame(self.history).to_csv(self.history_file, index=False)
 
 
 def cli():

@@ -11,3 +11,9 @@ slack: 1
 interval_time: 1s
 unit: F
 phone_number: 8184553749
+pwm_freq: 2
+pid_Kp: 1.0
+pid_Ki: 0.1
+pid_Kd: 0.05
+checkpoint_length: 10
+history_file: '~/.auto_fermenter_history'

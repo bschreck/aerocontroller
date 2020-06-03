@@ -1,3 +1,7 @@
+import logging
+import sys
+
+
 def get_logger(name):
     logger = logging.getLogger(name)
     console = logging.StreamHandler(sys.stdout)
@@ -5,3 +9,4 @@ def get_logger(name):
     console.setFormatter(formatter)
     logger.addHandler(console)
     logger.setLevel(logging.INFO)
+    return logger

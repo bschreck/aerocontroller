@@ -1,6 +1,16 @@
 from setuptools import setup, find_packages
 from kojifier import __version__
 
+extras_require={
+    'rpi': [
+        'RPi.GPIO',
+    ],
+    'test': [
+        'pytest',
+        'fake_rpi'
+    ]
+}
+
 setup(
     name='kojifier',
     version=__version__,
@@ -16,11 +26,11 @@ setup(
         'twilio',
         'python-dotenv',
         'pyyaml',
-        'RPi.GPIO'
+        'simple-pid',
+        'pandas'
     ],
-    tests_require=[
-        "pytest"
-    ],
+    extras_require=extras_require,
+    tests_require=extras_require['test'],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Science/Research",

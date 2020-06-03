@@ -3,7 +3,7 @@ from gpiozero import LED
 try:
     from w1thermsensor import W1ThermSensor
 except Exception:
-    pass
+    W1ThermSensor = None
 
 
 def parse_time(t):
@@ -18,10 +18,10 @@ def parse_time(t):
             if t_with_u[-1] != unit:
                 continue
             t_no_u = t_with_u[:-1]
-            return int(t_no_u) * units[unit]
+            return float(t_no_u) * units[unit]
         except Exception:
             continue
-    return int(t)
+    return float(t)
 
 
 def parse_temp(temp, unit):
@@ -63,7 +63,8 @@ class LEDReverseWrapper:
 
 
 class W1SensorWrapper:
-    def __init__(self):
+    def __init__(self, fermenter=None):
+        self.fermenter = fermenter
         self.sensor = W1ThermSensor()
 
     def get_temp(self, unit):
