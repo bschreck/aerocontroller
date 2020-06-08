@@ -8,6 +8,10 @@ extras_require={
     'test': [
         'pytest',
         'fake_rpi'
+    ],
+    'opt': [
+        'torch',
+        'torchvision'
     ]
 }
 

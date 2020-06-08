@@ -39,6 +39,7 @@ class AutoFermenter:
                  pid_Kp=1.0,
                  pid_Ki=0.1,
                  pid_Kd=0.05,
+                 pid_update_tuning_time=10,
                  checkpoint_length=10,
                  history_file=os.path.expanduser('~/.auto_fermenter_history')
                  ):
@@ -71,12 +72,14 @@ class AutoFermenter:
         self.pid_Kp = pid_Kp
         self.pid_Ki = pid_Ki
         self.pid_Kd = pid_Kd
+        self.pid_update_tuning_time = pid_update_tuning_time
 
         self.checkpoint_length = checkpoint_length
         self.history_file = history_file
 
-        if config:
-            for k, v in utils.load_config(config).items():
+        self.config_file = config
+        if self.config_file:
+            for k, v in utils.load_config(self.config_file).items():
                 setattr(self, k, v)
 
         if self.phone_number and self.twilio_sid and self.twilio_token:
@@ -86,7 +89,7 @@ class AutoFermenter:
         self.pid = PID(self.pid_Kp, self.pid_Ki, self.pid_Kd,
                        setpoint=self.incubate_temp)
         self.pid.output_limits = (0, 100)
-        self.pid.sample_time = self.interval_time
+        # self.pid.sample_time = self.interval_time
         self.history = {
             'power': [],
             'temp': [],
@@ -98,17 +101,21 @@ class AutoFermenter:
         self.history['temp'].append(self.temp)
         self.history['time'].append(datetime.datetime.now())
 
-    def heat(self, power):
+    def adjust_hot_plate(self, power):
         self.log_history(power)
         self.plate.set_duty_cycle(power)
+
+    def heat(self):
+        self.log_history(100)
+        self.plate.set_duty_cycle(100)
         self.fan.off()
         self.in_vent.off()
         self.out_vent.off()
         self.drain.off()
 
-    def cool(self, power, with_vent=False, with_drain=False):
-        self.log_history(power)
-        self.plate.set_duty_cycle(power)
+    def cool(self, with_vent=False, with_drain=False):
+        self.log_history(0)
+        self.plate.set_duty_cycle(0)
         if with_drain:
             self.drain.on()
         else:
@@ -143,10 +150,7 @@ class AutoFermenter:
         logger.info(f"Target Temp = {self.incubate_temp}")
         logger.info(f"Current Temp = {self.temp}")
         self.new_hot_plate_power = self.pid(self.temp)
-        if self.new_hot_plate_power > 50:
-            self.cool(self.new_hot_plate_power, with_vent=False, with_drain=False)
-        else:
-            self.heat(self.new_hot_plate_power)
+        self.adjust_hot_plate(self.new_hot_plate_power)
         sys.stdout.flush()
         if not self.too_hot and not self.too_cold:
             return True
@@ -175,28 +179,29 @@ class AutoFermenter:
         logger.info("Soaking")
         time.sleep(self.soak_time)
         logger.info("Draining")
-        self.cool(0, with_vent=False, with_drain=True)
+        self.cool(with_vent=False, with_drain=True)
         time.sleep(self.pre_steam_drain_time)
         logger.info("Heating")
-        self.heat(100)
+        self.heat()
         time.sleep(self.steam_time)
         logger.info("Cooling")
-        self.cool(0, with_vent=False, with_drain=False)
+        self.cool(with_vent=False, with_drain=False)
         time.sleep(self.cool_time)
         logger.info("Draining")
-        self.cool(0, with_vent=False, with_drain=True)
+        self.cool(with_vent=False, with_drain=True)
         time.sleep(self.drain_time)
         logger.info("Drying")
-        self.cool(0, with_vent=True, with_drain=True)
+        self.cool(with_vent=True, with_drain=True)
         time.sleep(self.dry_time)
-        self.cool(0, with_vent=False, with_drain=False)
+        self.cool(with_vent=False, with_drain=False)
         alerted = False
         logger.info("Waiting for correct incubate temperature")
         self.save_history()
         self.previous_checkpoint = time.time()
+        self.last_pid_update = time.time()
         while True:
-            target_temp = self.incubate_adjust()
-            if not alerted and target_temp:
+            at_target_temp = self.incubate_adjust()
+            if not alerted and at_target_temp:
                 logger.info("At target temperature")
                 self.alert_target_temp()
                 alerted = True
@@ -211,10 +216,38 @@ class AutoFermenter:
             if time.time() - self.previous_checkpoint > self.checkpoint_length:
                 self.save_history()
                 self.previous_checkpoint = time.time()
+            if time.time() - self.last_pid_update > self.pid_update_tuning_time:
+                self.set_pid()
+                self.last_pid_update = time.time()
+
         self.alert_done()
         self.save_history()
     def save_history(self):
         pd.DataFrame(self.history).to_csv(self.history_file, index=False)
+
+    def set_pid(self):
+        try:
+            if self.config:
+                config = utils.load_config(config)
+                tunings = (config['pid_Kp'], config['pid_Ki'], config['pid_Kd'])
+                setpoint = config['incubate_temp']
+        except Exception as e:
+            print("unable to load new config")
+            return
+        if tunings != self.pid.tunings:
+            print(f"setting tunings to {tunings}")
+            try:
+                self.pid.tunings = tuple([float(x) for x in tunings])
+            except (ValueError, TypeError):
+                print("Unable to set tunings")
+                return
+        if setpoint != self.pid.setpoint:
+            print(f"setting setpoint to {setpoint}")
+            try:
+                pid.setpoint = float(setpoint)
+            except (ValueError, TypeError):
+                print("Unable to set setpoint")
+        return tunings, setpoint
 
 
 def cli():

@@ -1,4 +1,6 @@
 import pytest
+import time
+import math
 # Replace libraries by fake ones
 import sys
 import fake_rpi
@@ -43,6 +45,11 @@ class MockW1ThermSensor:
     def __init__(self, fermenter):
         self.calls = 0
         self.fermenter = fermenter
+        self.dts = []
+        self.temps = []
+        self.powers = []
+        self.time_since_cooling = 0
+        self.previous_time = None
     def get_temp(self, degrees):
         if self.calls < 20:
             self.calls += 1
@@ -53,25 +60,22 @@ class MockW1ThermSensor:
             self.temp = 88
             return self.temp
         self.calls += 1
+        self.fermenter.pid.reset()
 
-        # range is [-10, 10]
-        temp_slope = (self.fermenter.new_hot_plate_power - 50) / 5
-        if temp_slope < 0:
-            if self.temp > 25:
-                # linear to room temp
-                self.temp -= .1
-            return self.temp
+        min_temp = 75
+        max_temp = 500
+        p = self.fermenter.new_hot_plate_power
+        current_time = time.time()
+        dt = current_time - (self.previous_time or current_time)
+        self.previous_time = current_time
+        if p == 0:
+            if self.temp > min_temp:
+                self.temp -= .02 * dt
         else:
-            import pdb; pdb.set_trace()
-            # make temperature a logistic fn
-            max_temp = 500
-            # gain is pid power
-            dt = temp_slope * (1 - (self.temp / max_temp)) * self.temp
-            if np.isinf(dt) or np.isnan(dt):
-                # TODO: figure this out
-                import pdb; pdb.set_trace()
-            self.temp += dt
-            print(self.temp)
+            if self.temp < max_temp:
+                self.temp += p * dt
+        self.powers.append(p)
+        self.temps.append(self.temp)
         return self.temp
 
 
@@ -82,6 +86,8 @@ class MockLED:
         pass
     def off(self):
         pass
+
+
 class MockTwilioClient:
     def __init__(self, sid, token):
         self.sid = sid

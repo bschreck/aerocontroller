@@ -8,12 +8,13 @@ wait_for_human_input_time: 1s
 incubate_time: 10s
 incubate_temp: 88F
 slack: 1
-interval_time: .0001s
+interval_time: 0s
 unit: F
 phone_number: 8184553749
 pwm_freq: 2
-pid_Kp: 1.0
+pid_Kp: 5.0
 pid_Ki: 0.1
 pid_Kd: 0.05
+pid_update_tuning_time: 1
 checkpoint_length: 1
 history_file: '~/.auto_fermenter_history'

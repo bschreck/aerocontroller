@@ -135,7 +135,5 @@ if __name__ == '__main__':
             last_update = time.time()
         if time.time() - last_update > update_tuning_time:
             res = set_pid(pid, 'tuning.yml')
-            if res:
-                tunings, setpoint
             last_update = time.time()
         time.sleep(interval)
