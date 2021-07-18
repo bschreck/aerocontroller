@@ -43,7 +43,7 @@ setup(
     include_package_data=True,
     entry_points={
     'console_scripts': [
-            'start_aerocontroller = aerocontroller.controller:cli',
+            'start_aerocontroller = aerocontroller.controller:main',
         ],
     }
 )

@@ -9,6 +9,7 @@ from twilio.rest import Client as TwilioClient
 import math
 from dotenv import load_dotenv
 import os
+import fire
 
 class AeroController:
     def __init__(self, env_path):
@@ -74,7 +75,7 @@ class AeroController:
             body=msg
         )
 
-    def run(self):
+    def step(self):
         temp = self.si7021.get_temp('F')
         print("TEMP F : ", temp)
         if temp < self.low_temp_threshold or temp > self.high_temp_threshold:
@@ -109,8 +110,9 @@ class AeroController:
 
         time.sleep(1)
         sys.stdout.flush()
+    def run(self):
+        while True:
+            self.step()
 
-if __name__ == '__main__':
-    controller = AeroController('.env')
-    while True:
-        controller.run()
+def main():
+    fire.Fire(AeroController)

@@ -79,4 +79,4 @@ def test_auto_fermenter_tempeh(mock_led):
     mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", MockTwilioClient)
     with mock_si7021, mock_twilio_client:
         controller = AeroController(env_path='aerocontroller/.env.test')
-        controller.run()
+        controller.step()
