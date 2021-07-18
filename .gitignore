@@ -1,5 +1,5 @@
-kojifier.egg-info
-kojifier.egg-info/*
+aerocontroller.egg-info
+aerocontroller.egg-info/*
 __pycache__
-kojifier/__pycache__
+aerocontroller/__pycache__
 .env

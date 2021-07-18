@@ -1,9 +1,5 @@
 import yaml
 from gpiozero import LED
-try:
-    from w1thermsensor import W1ThermSensor
-except Exception:
-    W1ThermSensor = None
 
 
 def parse_time(t):
@@ -60,16 +56,3 @@ class LEDReverseWrapper:
 
     def off(self):
         self.led.on()
-
-
-class W1SensorWrapper:
-    def __init__(self, fermenter=None):
-        self.fermenter = fermenter
-        self.sensor = W1ThermSensor()
-
-    def get_temp(self, unit):
-        if unit == 'F':
-            return self.sensor.get_temperature(W1ThermSensor.DEGREES_F)
-        else:
-            return self.sensor.get_temperature()
-

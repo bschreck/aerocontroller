@@ -1,5 +1,0 @@
-[console_scripts]
-auto_fermenter = kojifier.auto_fermenter:cli
-kojify_adjust = kojifier.incubator:cli
-kojify_schedule = kojifier.schedule:schedule
-
