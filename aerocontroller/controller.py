@@ -30,6 +30,7 @@ class AeroController:
         self.outpump_start_hour = int(os.environ.get("OUTPUMP_START_HOUR"))
         self.outpump_end_hour = int(os.environ.get("OUTPUMP_END_HOUR"))
         self.inpump_on_seconds = int(os.environ.get("INPUMP_ON_SECONDS"))
+        self.alert_wait_time_seconds = int(os.environ.get("ALERT_WAIT_TIME_SECONDS"))
 
         self.si7021 = SI7021()
         self.light = LED('BOARD11')
@@ -37,6 +38,7 @@ class AeroController:
         self.outpump = LED('BOARD16')
         self.inpump_state = False
         self.outpump_state = False
+        self.previous_alert_times = {}
         self.reset_day()
 
     def turn_light_on(self):
@@ -96,6 +98,14 @@ class AeroController:
             self.send_text("turning off outpump")
             self.sent_outpump_off_text = True
 
+    def send_alert_text(self, alert, wait_time_seconds):
+        if (
+                dt.datetime.now() - self.previous_alert_times.get(alert, dt.datetime(2000, 1, 1))
+                >= dt.timedelta(seconds=wait_time_seconds)
+        ):
+            self.send_text(alert)
+        self.previous_alert_times[alert] = dt.datetime.now()
+
     def reset_day(self):
         self.day = dt.datetime.today().day
         self.sent_led_on_text = False
@@ -115,12 +125,12 @@ class AeroController:
         if second == 0:
             print("TEMP F : ", temp)
         if temp < self.low_temp_threshold or temp > self.high_temp_threshold:
-            self.send_text(f"Temperature alert: {round(temp)}%")
+            self.send_alert_text(f"Temperature alert: {round(temp)} Degrees F", self.alert_wait_time_seconds)
         humidity = self.si7021.get_humidity()
         if second == 0:
             print("HUMIDITY: ", humidity)
         if humidity < self.low_humidity_threshold or humidity > self.high_humidity_threshold:
-            self.send_text(f"Humidity alert: {round(humidity)}%")
+            self.send_alert_text(f"Humidity alert: {round(humidity)}%", self.alert_wait_time_seconds)
 
 
         if hour >= self.led_start_hour and hour <= self.led_end_hour:

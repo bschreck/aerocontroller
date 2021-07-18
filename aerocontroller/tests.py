@@ -14,6 +14,8 @@ from aerocontroller.controller import AeroController
 from unittest.mock import call
 from unittest import mock
 import numpy as np
+from freezegun import freeze_time
+
 
 
 @pytest.mark.parametrize(
@@ -51,32 +53,86 @@ class MockLED:
         pass
 
 
-class MockTwilioClient:
-    def __init__(self, sid, token):
-        self.sid = sid
-        self.token = token
-        self.messages = self
-        self.calls = 0
-    def create(self, to, from_, body):
-        if self.calls == 0:
-            assert 'turning on LED' in body
-        elif self.calls == 1:
-            assert 'turning on outpump' in body
-        else:
-            raise ValueError("too many calls")
-        self.calls += 1
+def gen_mock_twilio_client(calls):
+    class MockTwilioClient:
+        def __init__(self, sid, token):
+            self.sid = sid
+            self.token = token
+            self.messages = self
+            self.call_index = 0
+        def create(self, to, from_, body):
+            if self.call_index >= len(calls):
+                raise ValueError("too many twilio calls")
+            assert calls[self.call_index] in body
+            self.call_index += 1
+    return MockTwilioClient
 
-class MockSI7021:
-    def get_temp(self, unit):
-        return 70
-    def get_humidity(self):
-        return 40
+def gen_mock_si7021(temp, humidity):
+    class MockSI7021:
+        def __init__(self):
+            self.temp = temp
+            self.humidity = humidity
+        def get_temp(self, unit):
+            return self.temp
+        def get_humidity(self):
+            return self.humidity
+    return MockSI7021
 
 
+@freeze_time('2021-07-18 12:30:00')
 @mock.patch('aerocontroller.controller.LED', side_effect=MockLED)
-def test_auto_fermenter_tempeh(mock_led):
-    mock_si7021 = mock.patch("aerocontroller.controller.SI7021", MockSI7021)
-    mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", MockTwilioClient)
+def test_aerocontroller_normal(mock_led):
+    mock_si7021 = mock.patch("aerocontroller.controller.SI7021", gen_mock_si7021(70, 40))
+    calls = ['turning on LED', 'turning on outpump']
+    mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", gen_mock_twilio_client(calls))
     with mock_si7021, mock_twilio_client:
         controller = AeroController(env_path='aerocontroller/.env.test')
         controller.step()
+        controller.step()
+
+@freeze_time('2021-07-18 07:00:00')
+@mock.patch('aerocontroller.controller.LED', side_effect=MockLED)
+def test_aerocontroller_normal(mock_led):
+    mock_si7021 = mock.patch("aerocontroller.controller.SI7021", gen_mock_si7021(70, 40))
+    calls = ['turning on LED', 'turning off outpump']
+    mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", gen_mock_twilio_client(calls))
+    with mock_si7021, mock_twilio_client:
+        controller = AeroController(env_path='aerocontroller/.env.test')
+        controller.step()
+        controller.step()
+
+@freeze_time('2021-07-18 04:00:00')
+@mock.patch('aerocontroller.controller.LED', side_effect=MockLED)
+def test_aerocontroller_normal(mock_led):
+    mock_si7021 = mock.patch("aerocontroller.controller.SI7021", gen_mock_si7021(70, 40))
+    calls = ['turning off LED', 'turning off outpump']
+    mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", gen_mock_twilio_client(calls))
+    with mock_si7021, mock_twilio_client:
+        controller = AeroController(env_path='aerocontroller/.env.test')
+        controller.step()
+        controller.step()
+
+@mock.patch('aerocontroller.controller.LED', side_effect=MockLED)
+def test_aerocontroller_extreme_measurements(mock_led):
+    mock_si7021 = mock.patch("aerocontroller.controller.SI7021", gen_mock_si7021(99.6, 100.1))
+    calls = [
+        'Temperature alert: 100 Degrees F',
+        "Humidity alert: 100%",
+        'turning on LED',
+        'turning off outpump',
+        'Temperature alert: 100 Degrees F',
+        "Humidity alert: 100%",
+    ]
+    mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", gen_mock_twilio_client(calls))
+    with mock_si7021, mock_twilio_client:
+        controller = AeroController(env_path='aerocontroller/.env.test')
+        freezer = freeze_time('2021-07-18 07:00:00')
+        freezer.start()
+        controller.step()
+        controller.step()
+        freezer.stop()
+        freezer = freeze_time('2021-07-18 07:06:00')
+        freezer.start()
+        controller.step()
+        controller.step()
+        freezer.stop()

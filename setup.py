@@ -29,6 +29,7 @@ setup(
         'twilio',
         'python-dotenv',
         'pyyaml',
+        'freezegun',
     ],
     extras_require=extras_require,
     tests_require=extras_require['test'],
