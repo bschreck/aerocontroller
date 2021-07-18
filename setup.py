@@ -29,7 +29,6 @@ setup(
         'twilio',
         'python-dotenv',
         'pyyaml',
-        'pandas'
     ],
     extras_require=extras_require,
     tests_require=extras_require['test'],
