@@ -37,6 +37,7 @@ class AeroController:
         self.outpump = LED('BOARD16')
         self.inpump_state = False
         self.outpump_state = False
+        self.reset_day()
 
     def turn_light_on(self):
         self.light.off()
@@ -75,34 +76,68 @@ class AeroController:
             body=msg
         )
 
+    def send_led_on_text(self):
+        if not self.sent_led_on_text:
+            self.send_text("turning on LED")
+            self.sent_led_on_text = True
+
+    def send_led_off_text(self):
+        if not self.sent_led_off_text:
+            self.send_text("turning off LED")
+            self.sent_led_off_text = True
+
+    def send_outpump_on_text(self):
+        if not self.sent_outpump_on_text:
+            self.send_text("turning on outpump")
+            self.sent_outpump_on_text = True
+
+    def send_outpump_off_text(self):
+        if not self.sent_outpump_off_text:
+            self.send_text("turning off outpump")
+            self.sent_outpump_off_text = True
+
+    def reset_day(self):
+        self.day = dt.datetime.today().day
+        self.sent_led_on_text = False
+        self.sent_led_off_text = False
+        self.sent_outpump_on_text = False
+        self.sent_outpump_off_text = False
+
     def step(self):
+        day = dt.datetime.today().day
+        if day > self.day:
+            self.reset_day()
+
+        hour = dt.datetime.today().hour
+        second = dt.datetime.today().second
+        minute = dt.datetime.today().minute
+
         temp = self.si7021.get_temp('F')
-        print("TEMP F : ", temp)
+        if minute == 0:
+            print("TEMP F : ", temp)
         if temp < self.low_temp_threshold or temp > self.high_temp_threshold:
             self.send_text(f"Temperature alert: {round(temp)}%")
         humidity = self.si7021.get_humidity()
-        print("HUMIDITY: ", humidity)
+        if minute == 0:
+            print("HUMIDITY: ", humidity)
         if humidity < self.low_humidity_threshold or humidity > self.high_humidity_threshold:
             self.send_text(f"Humidity alert: {round(humidity)}%")
 
-        hour = dt.datetime.today().hour
 
-        print("HOUR = ", hour)
         if hour >= self.led_start_hour and hour <= self.led_end_hour:
             self.turn_light_on()
-            self.send_text("turning on LED")
+            self.send_led_on_text()
         else:
             self.turn_light_off()
-            self.send_text("turning off LED")
+            self.send_led_off_text()
 
         if hour >= self.outpump_start_hour and hour <= self.outpump_end_hour:
             self.turn_outpump_on()
-            self.send_text("turning on outpump")
+            self.send_outpump_on_text()
         else:
             self.turn_outpump_off()
-            self.send_text("turning off outpump")
+            self.send_outpump_off_text()
 
-        second = dt.datetime.today().second
         if second <= self.inpump_on_seconds:
             self.turn_inpump_on()
         else:
