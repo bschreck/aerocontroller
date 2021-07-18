@@ -110,15 +110,14 @@ class AeroController:
 
         hour = dt.datetime.today().hour
         second = dt.datetime.today().second
-        minute = dt.datetime.today().minute
 
         temp = self.si7021.get_temp('F')
-        if minute == 0:
+        if second == 0:
             print("TEMP F : ", temp)
         if temp < self.low_temp_threshold or temp > self.high_temp_threshold:
             self.send_text(f"Temperature alert: {round(temp)}%")
         humidity = self.si7021.get_humidity()
-        if minute == 0:
+        if second == 0:
             print("HUMIDITY: ", humidity)
         if humidity < self.low_humidity_threshold or humidity > self.high_humidity_threshold:
             self.send_text(f"Humidity alert: {round(humidity)}%")
