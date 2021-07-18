@@ -84,7 +84,6 @@ class SI7021:
            Raises:
                 None
        """
-       print("\nGet Humidity - no hold split")
        msgs = self._i2c.msg_write([rh_no_hold])
        # need a pause here between sending the request and getting the data
        time.sleep(0.03)
