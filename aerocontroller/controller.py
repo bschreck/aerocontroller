@@ -69,7 +69,7 @@ class AeroController:
             self.turn_inpump_oon()
 
     def cycle_outpump(self):
-        if self.inpump_state:
+        if self.outpump_state:
             self.outpump.off()()
         else:
             self.outpump.on()
