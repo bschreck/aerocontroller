@@ -62,11 +62,11 @@ class AeroController:
         self.inpump_state = False
 
     def turn_outpump_on(self):
-        self.outpump.on()
+        self.outpump.off()
         self.outpump_state = True
 
     def turn_outpump_off(self):
-        self.outpump.off()
+        self.outpump.on()
         self.outpump_state = False
 
     def cycle_inpump(self):
@@ -155,7 +155,6 @@ class AeroController:
             self.send_led_off_text()
 
         if self.water_level_too_high():
-            print("TURNING ON OUTPUMP")
             self.turn_outpump_on()
             self.send_outpump_on_text()
         else:
