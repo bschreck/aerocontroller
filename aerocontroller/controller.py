@@ -12,10 +12,11 @@ import os
 import fire
 
 class AeroController:
-    def __init__(self, env_path, text=False):
+    def __init__(self, env_path, text=False, debug=False):
         self.env_path = env_path
         load_dotenv(dotenv_path=self.env_path)
         self.text = text
+        self.debug = debug
         if self.text:
             self.twilio_sid = os.environ.get("TWILIO_SID")
             self.twilio_token = os.environ.get("TWILIO_TOKEN")
@@ -46,26 +47,38 @@ class AeroController:
         self.reset_day()
 
     def turn_light_on(self):
+        if self.debug:
+            print("turning light on")
         self.light.off()
         self.led_state = True
 
     def turn_light_off(self):
+        if self.debug:
+            print("turning light off")
         self.light.on()
         self.led_state = False
 
     def turn_inpump_on(self):
+        if self.debug:
+            print("turning inpump on")
         self.inpump.off()
         self.inpump_state = True
 
     def turn_inpump_off(self):
+        if self.debug:
+            print("turning inpump off")
         self.inpump.on()
         self.inpump_state = False
 
     def turn_outpump_on(self):
+        if self.debug:
+            print("turning outpump on")
         self.outpump.off()
         self.outpump_state = True
 
     def turn_outpump_off(self):
+        if self.debug:
+            print("turning outpump off")
         self.outpump.on()
         self.outpump_state = False
 
@@ -120,7 +133,10 @@ class AeroController:
         self.previous_alert_times[alert] = dt.datetime.now()
 
     def water_level_too_high(self):
-        return self.water_level_sensor == 0
+        water_level_too_high =  self.water_level_sensor == 0
+        if self.debug:
+            print(f"water too high: {water_level_too_high}")
+        return water_level_too_high
 
     def reset_day(self):
         self.day = dt.datetime.today().day
