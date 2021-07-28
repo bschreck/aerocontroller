@@ -88,6 +88,8 @@ class AeroController:
                 from_=f"+1{self.twilio_from_number}",
                 body=msg
             )
+        else:
+            print(msg)
 
     def send_led_on_text(self):
         if not self.sent_led_on_text:
