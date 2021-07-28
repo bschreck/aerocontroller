@@ -12,14 +12,16 @@ import os
 import fire
 
 class AeroController:
-    def __init__(self, env_path):
+    def __init__(self, env_path, text=False):
         self.env_path = env_path
         load_dotenv(dotenv_path=self.env_path)
-        self.twilio_sid = os.environ.get("TWILIO_SID")
-        self.twilio_token = os.environ.get("TWILIO_TOKEN")
-        self.twilio_from_number = os.environ.get("TWILIO_FROM_NUMBER")
-        self.twilio_to_number = os.environ.get("TWILIO_TO_NUMBER")
-        self.twilio_client = TwilioClient(self.twilio_sid, self.twilio_token)
+        self.text = text
+        if self.text:
+            self.twilio_sid = os.environ.get("TWILIO_SID")
+            self.twilio_token = os.environ.get("TWILIO_TOKEN")
+            self.twilio_from_number = os.environ.get("TWILIO_FROM_NUMBER")
+            self.twilio_to_number = os.environ.get("TWILIO_TO_NUMBER")
+            self.twilio_client = TwilioClient(self.twilio_sid, self.twilio_token)
 
         self.low_humidity_threshold = int(os.environ.get("LOW_HUMIDITY_THRESHOLD"))
         self.high_humidity_threshold = int(os.environ.get("HIGH_HUMIDITY_THRESHOLD"))
@@ -73,11 +75,12 @@ class AeroController:
             self.outpump.on()
 
     def send_text(self, msg):
-        self.twilio_client.messages.create(
-            to=f"+1{self.twilio_to_number}",
-            from_=f"+1{self.twilio_from_number}",
-            body=msg
-        )
+        if self.text:
+            self.twilio_client.messages.create(
+                to=f"+1{self.twilio_to_number}",
+                from_=f"+1{self.twilio_from_number}",
+                body=msg
+            )
 
     def send_led_on_text(self):
         if not self.sent_led_on_text:
@@ -145,6 +148,7 @@ class AeroController:
             self.send_led_off_text()
 
         if self.water_level_too_high():
+            print("TURNING ON OUTPUMP")
             self.turn_outpump_on()
             self.send_outpump_on_text()
         else:
