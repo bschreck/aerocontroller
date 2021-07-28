@@ -59,7 +59,7 @@ class MockSensor:
 
     @property
     def value(self):
-        return self.on
+        return ~self.on
 
 
 def gen_mock_twilio_client(calls):

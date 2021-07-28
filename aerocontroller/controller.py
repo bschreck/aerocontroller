@@ -107,6 +107,9 @@ class AeroController:
             self.send_text(alert)
         self.previous_alert_times[alert] = dt.datetime.now()
 
+    def water_level_too_high(self):
+        return self.water_level_sensor == 0
+
     def reset_day(self):
         self.day = dt.datetime.today().day
         self.sent_led_on_text = False
@@ -141,7 +144,7 @@ class AeroController:
             self.turn_light_off()
             self.send_led_off_text()
 
-        if self.water_level_sensor.value == 1:
+        if self.water_level_too_high():
             self.turn_outpump_on()
             self.send_outpump_on_text()
         else:
