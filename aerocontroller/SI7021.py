@@ -97,6 +97,8 @@ class SI7021:
 
    def get_temp(self, unit):
        tempc = self.get_tempC()
+       if tempc is None:
+           return None
        if unit == 'C':
            return tempc
        return tempc * (9/5) + 32
