@@ -39,6 +39,7 @@ class AeroController:
         self.water_level_sensor = Button('BOARD12')
         self.inpump = LED('BOARD18')
         self.outpump = LED('BOARD16')
+        self.led_state = False
         self.inpump_state = False
         self.outpump_state = False
         self.previous_alert_times = {}
@@ -46,33 +47,39 @@ class AeroController:
 
     def turn_light_on(self):
         self.light.off()
+        self.led_state = True
 
     def turn_light_off(self):
         self.light.on()
+        self.led_state = False
 
     def turn_inpump_on(self):
         self.inpump.off()
+        self.inpump_state = True
 
     def turn_inpump_off(self):
         self.inpump.on()
+        self.inpump_state = False
 
     def turn_outpump_on(self):
         self.outpump.on()
+        self.outpump_state = True
 
     def turn_outpump_off(self):
         self.outpump.off()
+        self.outpump_state = False
 
     def cycle_inpump(self):
         if self.inpump_state:
             self.turn_inpump_off()
         else:
-            self.turn_inpump_oon()
+            self.turn_inpump_on()
 
     def cycle_outpump(self):
         if self.outpump_state:
-            self.outpump.off()()
+            self.turn_outpump_off()
         else:
-            self.outpump.on()
+            self.turn_outpump_on()
 
     def send_text(self, msg):
         if self.text:
