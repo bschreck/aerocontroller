@@ -3,7 +3,7 @@ import sys
 # switch is 8/gpio14
 
 from .SI7021 import SI7021
-from gpiozero import LED
+from gpiozero import LED, Button
 import time
 from twilio.rest import Client as TwilioClient
 import math
@@ -34,6 +34,7 @@ class AeroController:
 
         self.si7021 = SI7021()
         self.light = LED('BOARD11')
+        self.water_level_sensor = Button('BOARD12')
         self.inpump = LED('BOARD18')
         self.outpump = LED('BOARD16')
         self.inpump_state = False
@@ -140,7 +141,7 @@ class AeroController:
             self.turn_light_off()
             self.send_led_off_text()
 
-        if hour >= self.outpump_start_hour and hour <= self.outpump_end_hour:
+        if self.water_level_sensor.value == 1:
             self.turn_outpump_on()
             self.send_outpump_on_text()
         else:

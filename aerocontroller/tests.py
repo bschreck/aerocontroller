@@ -52,6 +52,15 @@ class MockLED:
     def off(self):
         pass
 
+class MockSensor:
+    on = False
+    def __init__(self, pin):
+        self.pin = pin
+
+    @property
+    def value(self):
+        return self.on
+
 
 def gen_mock_twilio_client(calls):
     class MockTwilioClient:
@@ -81,10 +90,12 @@ def gen_mock_si7021(temp, humidity):
 
 @freeze_time('2021-07-18 12:30:00')
 @mock.patch('aerocontroller.controller.LED', side_effect=MockLED)
-def test_aerocontroller_normal(mock_led):
+@mock.patch('aerocontroller.controller.Button', side_effect=MockSensor)
+def test_aerocontroller_normal(mock_led, mock_sensor):
     mock_si7021 = mock.patch("aerocontroller.controller.SI7021", gen_mock_si7021(70, 40))
     calls = ['turning on LED', 'turning on outpump']
     mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", gen_mock_twilio_client(calls))
+    MockSensor.on = True
     with mock_si7021, mock_twilio_client:
         controller = AeroController(env_path='aerocontroller/.env.test')
         controller.step()
@@ -92,10 +103,12 @@ def test_aerocontroller_normal(mock_led):
 
 @freeze_time('2021-07-18 07:00:00')
 @mock.patch('aerocontroller.controller.LED', side_effect=MockLED)
-def test_aerocontroller_normal(mock_led):
+@mock.patch('aerocontroller.controller.Button', side_effect=MockSensor)
+def test_aerocontroller_normal(mock_led, mock_sensor):
     mock_si7021 = mock.patch("aerocontroller.controller.SI7021", gen_mock_si7021(70, 40))
     calls = ['turning on LED', 'turning off outpump']
     mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", gen_mock_twilio_client(calls))
+    MockSensor.on = False
     with mock_si7021, mock_twilio_client:
         controller = AeroController(env_path='aerocontroller/.env.test')
         controller.step()
@@ -103,17 +116,20 @@ def test_aerocontroller_normal(mock_led):
 
 @freeze_time('2021-07-18 04:00:00')
 @mock.patch('aerocontroller.controller.LED', side_effect=MockLED)
-def test_aerocontroller_normal(mock_led):
+@mock.patch('aerocontroller.controller.Button', side_effect=MockSensor)
+def test_aerocontroller_normal(mock_led, mock_sensor):
     mock_si7021 = mock.patch("aerocontroller.controller.SI7021", gen_mock_si7021(70, 40))
     calls = ['turning off LED', 'turning off outpump']
     mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", gen_mock_twilio_client(calls))
+    MockSensor.on = False
     with mock_si7021, mock_twilio_client:
         controller = AeroController(env_path='aerocontroller/.env.test')
         controller.step()
         controller.step()
 
 @mock.patch('aerocontroller.controller.LED', side_effect=MockLED)
-def test_aerocontroller_extreme_measurements(mock_led):
+@mock.patch('aerocontroller.controller.Button', side_effect=MockSensor)
+def test_aerocontroller_extreme_measurements(mock_led, mock_sensor):
     mock_si7021 = mock.patch("aerocontroller.controller.SI7021", gen_mock_si7021(99.6, 100.1))
     calls = [
         'Temperature alert: 100 Degrees F',
@@ -124,6 +140,7 @@ def test_aerocontroller_extreme_measurements(mock_led):
         "Humidity alert: 100%",
     ]
     mock_twilio_client = mock.patch("aerocontroller.controller.TwilioClient", gen_mock_twilio_client(calls))
+    MockSensor.on = False
     with mock_si7021, mock_twilio_client:
         controller = AeroController(env_path='aerocontroller/.env.test')
         freezer = freeze_time('2021-07-18 07:00:00')
