@@ -133,7 +133,7 @@ class AeroController:
         self.previous_alert_times[alert] = dt.datetime.now()
 
     def water_level_too_high(self):
-        water_level_too_high =  self.water_level_sensor == 0
+        water_level_too_high = self.water_level_sensor.value == 0
         if self.debug:
             print(f"water too high: {water_level_too_high}")
         return water_level_too_high
