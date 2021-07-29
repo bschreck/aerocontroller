@@ -34,6 +34,7 @@ class AeroController:
         self.outpump_end_hour = int(os.environ.get("OUTPUMP_END_HOUR"))
         self.inpump_on_seconds = int(os.environ.get("INPUMP_ON_SECONDS"))
         self.alert_wait_time_seconds = int(os.environ.get("ALERT_WAIT_TIME_SECONDS"))
+        self.min_outpump_time = int(os.environ.get("MIN_OUTPUMP_TIME", 30))
 
         self.si7021 = SI7021()
         self.light = LED('BOARD11')
@@ -43,6 +44,7 @@ class AeroController:
         self.led_state = False
         self.inpump_state = False
         self.outpump_state = False
+        self.outpump_on_time = time.time() - self.min_outpump_time - 1
         self.previous_alert_times = {}
         self.reset_day()
 
@@ -75,12 +77,18 @@ class AeroController:
             print("turning outpump on")
         self.outpump.off()
         self.outpump_state = True
+        self.outpump_on_time = time.time()
 
     def turn_outpump_off(self):
+        if time.time() - self.outpump_on_time < self.min_outpump_time:
+            if self.debug:
+                print("not turning off outpump before min on time")
+            return
         if self.debug:
             print("turning outpump off")
         self.outpump.on()
         self.outpump_state = False
+        
 
     def cycle_inpump(self):
         if self.inpump_state:
